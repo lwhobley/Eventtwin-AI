@@ -23,4 +23,13 @@ void main() {
     expect(find.textContaining('LOCAL DEMO'), findsOneWidget);
     expect(find.text('Plan events with measured spaces'), findsOneWidget);
   });
+
+  testWidgets('unconfigured app requires Supabase setup', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(child: EventTwinApp(localDemo: false)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Supabase publishable key required'), findsOneWidget);
+    expect(find.textContaining('LOCAL DEMO'), findsNothing);
+  });
 }

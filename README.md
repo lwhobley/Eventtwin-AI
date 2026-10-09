@@ -11,7 +11,7 @@ Requires Flutter 3.47.5 or a compatible stable release.
 ### Supabase mode
 
 1. Copy `supabase.local.json.example` to `supabase.local.json` and enter the project's **publishable** key locally. This file is ignored by Git. Never use a service-role key in the Flutter app.
-2. Apply `supabase/migrations/20261009120000_tenant_foundation.sql` in the Supabase SQL Editor before signing up.
+2. The migrations in `supabase/migrations` are applied to the EventTwin Supabase project. For another project, apply them in version order before signing up.
 3. Run:
 
 ```powershell
@@ -46,6 +46,8 @@ flutter analyze
 dart format --output=none --set-exit-if-changed lib test
 ```
 
+The transactional SQL test in `supabase/tests/tenant_isolation.sql` checks owner and viewer access under simulated authenticated users. Run it with a privileged SQL connection; it rolls back its fixture data.
+
 ## Scope and limitations
 
-The migration currently defines profiles, organizations, memberships, venues, spaces, events, and floor plans with role-based RLS. The Flutter cloud workspace currently exposes organization creation and venue, room, and event draft operations. Floor-plan generation/editor and PDF export remain in local demo mode; cloud layouts, private BEO document storage, invitation flows, and RLS authorization integration tests are not connected yet. The app does not yet include irregular room geometry, fixed features, AI document processing, authoritative server validation, optimization, or simulation. Claude API, Python services, Stripe, and Three.js are not connected yet.
+The migrations define profiles, organizations, memberships, venues, spaces, events, and floor plans with role-based RLS. They were applied to the supplied EventTwin Supabase project on October 9, 2026. Floor-plan approval is blocked in the database until authoritative server validation is built. The Flutter cloud workspace exposes organization creation and venue, room, and event draft operations. Floor-plan generation/editor and PDF export remain in local demo mode; cloud layouts, private BEO document storage, invitation flows, and broader RLS authorization tests are not connected yet. The app does not yet include irregular room geometry, fixed features, AI document processing, authoritative server validation, optimization, or simulation. Claude API, Python services, Stripe, and Three.js are not connected yet.

@@ -118,12 +118,57 @@ class _CloudWorkspacePageState extends State<CloudWorkspacePage> {
     });
   }
 
-  Future<void> _confirmEvent(String id) async {
+  Future<void> _confirmEvent(Map<String, dynamic> event) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm event requirements'),
+        content: SizedBox(
+          width: 500,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Event: ${event['name']}\nGuests: ${event['guest_count']}',
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Original BEO / entry:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  (event['source_text'] as String).trim().isEmpty
+                      ? 'No BEO text supplied. This is manual entry.'
+                      : event['source_text'] as String,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Check the event name and guest count against the source. Other BEO details are not extracted yet.',
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     await _write(() async {
       await _client
           .from('events')
           .update({'requirements_confirmed': true})
-          .eq('id', id)
+          .eq('id', event['id'] as String)
           .eq('organization_id', _organizationId);
     });
   }
@@ -293,7 +338,7 @@ class _CloudWorkspacePageState extends State<CloudWorkspacePage> {
                   trailing: event['requirements_confirmed'] == true
                       ? const Icon(Icons.check_circle_outline)
                       : TextButton(
-                          onPressed: () => _confirmEvent(event['id'] as String),
+                          onPressed: () => _confirmEvent(event),
                           child: const Text('Confirm'),
                         ),
                 ),

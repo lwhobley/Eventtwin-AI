@@ -71,7 +71,7 @@ create table public.floorplans (
   version integer not null check (version > 0),
   objects jsonb not null default '[]'::jsonb check (jsonb_typeof(objects) = 'array'),
   validation jsonb not null default '{}'::jsonb,
-  approved_at timestamptz,
+  approved_at timestamptz check (approved_at is null),
   created_by uuid not null default auth.uid() references auth.users (id),
   created_at timestamptz not null default now(),
   unique (id, organization_id),

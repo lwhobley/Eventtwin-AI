@@ -7,10 +7,20 @@ const clearanceMeters = 0.9;
 const seatsPerTable = 10;
 
 List<String> validateLayout(Space space, List<TablePosition> tables) {
+  if (!space.widthMeters.isFinite ||
+      !space.heightMeters.isFinite ||
+      space.widthMeters <= 0 ||
+      space.heightMeters <= 0) {
+    return ['Room measurements must be finite and positive.'];
+  }
   final issues = <String>[];
   final radius = tableDiameterMeters / 2 + clearanceMeters;
   for (var i = 0; i < tables.length; i++) {
     final table = tables[i];
+    if (!table.x.isFinite || !table.y.isFinite) {
+      issues.add('Table ${i + 1} has invalid coordinates.');
+      continue;
+    }
     if (table.x - radius < 0 ||
         table.y - radius < 0 ||
         table.x + radius > space.widthMeters ||
@@ -20,6 +30,7 @@ List<String> validateLayout(Space space, List<TablePosition> tables) {
       );
     }
     for (var j = 0; j < i; j++) {
+      if (!tables[j].x.isFinite || !tables[j].y.isFinite) continue;
       if (math.sqrt(
             math.pow(table.x - tables[j].x, 2) +
                 math.pow(table.y - tables[j].y, 2),
@@ -36,6 +47,12 @@ List<String> validateLayout(Space space, List<TablePosition> tables) {
 
 List<LayoutPlan> generateLayouts(Space space, EventRecord event) {
   if (!space.verified) throw StateError('Verify room measurements first.');
+  if (!space.widthMeters.isFinite ||
+      !space.heightMeters.isFinite ||
+      space.widthMeters <= 0 ||
+      space.heightMeters <= 0) {
+    throw StateError('Enter finite, positive room measurements.');
+  }
   if (!event.confirmed || event.guests <= 0) {
     throw StateError('Confirm a positive guest count first.');
   }

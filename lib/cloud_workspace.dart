@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'cloud_floorplans.dart';
 import 'model.dart' show feetToMeters, metersToFeet;
 
 class CloudWorkspacePage extends StatefulWidget {
@@ -23,6 +24,7 @@ class _CloudWorkspacePageState extends State<CloudWorkspacePage> {
   String? _error;
   SupabaseClient get _client => Supabase.instance.client;
   String get _organizationId => widget.organization['id'] as String;
+  bool get _canEdit => widget.organization['role'] != 'viewer';
 
   @override
   void initState() {
@@ -173,6 +175,28 @@ class _CloudWorkspacePageState extends State<CloudWorkspacePage> {
     });
   }
 
+  void _openFloorplans(
+    Map<String, dynamic> event,
+    List<Map<String, dynamic>> spaces,
+  ) {
+    final space = spaces.where((s) => s['id'] == event['space_id']).firstOrNull;
+    if (space == null) {
+      setState(() => _error = 'The room for this event is unavailable.');
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => CloudFloorplansPage(
+          organizationId: _organizationId,
+          canEdit: _canEdit,
+          event: event,
+          space: space,
+        ),
+      ),
+    );
+  }
+
   Future<void> _write(Future<void> Function() action) async {
     try {
       await action();
@@ -275,17 +299,17 @@ class _CloudWorkspacePageState extends State<CloudWorkspacePage> {
               runSpacing: 8,
               children: [
                 FilledButton.icon(
-                  onPressed: _createVenue,
+                  onPressed: _canEdit ? _createVenue : null,
                   icon: const Icon(Icons.add),
                   label: const Text('New venue'),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () => _createSpace(data.venues),
+                  onPressed: _canEdit ? () => _createSpace(data.venues) : null,
                   icon: const Icon(Icons.add),
                   label: const Text('Add room'),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () => _createEvent(data.spaces),
+                  onPressed: _canEdit ? () => _createEvent(data.spaces) : null,
                   icon: const Icon(Icons.add),
                   label: const Text('New event'),
                 ),
@@ -336,9 +360,14 @@ class _CloudWorkspacePageState extends State<CloudWorkspacePage> {
                     '${event['guest_count']} guests · ${event['requirements_confirmed'] == true ? 'confirmed' : 'draft'}',
                   ),
                   trailing: event['requirements_confirmed'] == true
-                      ? const Icon(Icons.check_circle_outline)
+                      ? TextButton(
+                          onPressed: () => _openFloorplans(event, data.spaces),
+                          child: const Text('Floor plans'),
+                        )
                       : TextButton(
-                          onPressed: () => _confirmEvent(event),
+                          onPressed: _canEdit
+                              ? () => _confirmEvent(event)
+                              : null,
                           child: const Text('Confirm'),
                         ),
                 ),
@@ -407,6 +436,8 @@ class _SpaceDialogState extends State<_SpaceDialog> {
     if (_name.text.trim().isEmpty ||
         width == null ||
         depth == null ||
+        !width.isFinite ||
+        !depth.isFinite ||
         width <= 0 ||
         depth <= 0) {
       return;

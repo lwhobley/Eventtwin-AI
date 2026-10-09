@@ -1,6 +1,6 @@
 # EventTwin AI
 
-Standalone Flutter application for measured event-space planning. The repository supports Supabase email authentication and organization-scoped venues, rooms, and event drafts. The floor-plan editor remains an explicitly selected local demonstration.
+Standalone Flutter application for measured event-space planning. Supabase mode supports email authentication and organization-scoped venues, rooms, events, and versioned floor-plan drafts. A separate local demonstration remains available.
 
 The full product brief is in [docs/MASTER_BUILD_PROMPT.md](docs/MASTER_BUILD_PROMPT.md).
 
@@ -18,7 +18,9 @@ Requires Flutter 3.47.5 or a compatible stable release.
 flutter run -d chrome --dart-define-from-file=supabase.local.json
 ```
 
-The configured URL defaults to the supplied EventTwin project. Email sign-up, sign-in, password reset, organization creation, and RLS-protected venue, room, and event draft operations are available.
+The configured URL defaults to the supplied EventTwin project. Email sign-up, sign-in, password reset, and organization-scoped venue, room, event, and floor-plan draft operations are available.
+
+For a cloud floor plan, create a venue and a room, verify its measurements, create an event, and confirm the entered requirements against the source. Open **Floor plans** on that event. Generate three options, select a saved version, drag a table, and save the edit as a new version. Saved versions can be exported as planning PDFs. The database checks round-table capacity, boundaries, and clearances when each version is inserted; invalid drafts are rejected.
 
 ### Local demonstration mode
 
@@ -46,8 +48,8 @@ flutter analyze
 dart format --output=none --set-exit-if-changed lib test
 ```
 
-The transactional SQL test in `supabase/tests/tenant_isolation.sql` checks owner and viewer access under simulated authenticated users. Run it with a privileged SQL connection; it rolls back its fixture data.
+The transactional SQL tests in `supabase/tests` check tenant access and floor-plan validation under simulated authenticated users. Run them with a privileged SQL connection; both roll back their fixture data.
 
 ## Scope and limitations
 
-The migrations define profiles, organizations, memberships, venues, spaces, events, and floor plans with role-based RLS. They were applied to the supplied EventTwin Supabase project on October 9, 2026. Floor-plan approval is blocked in the database until authoritative server validation is built. The Flutter cloud workspace exposes organization creation and venue, room, and event draft operations. Floor-plan generation/editor and PDF export remain in local demo mode; cloud layouts, private BEO document storage, invitation flows, and broader RLS authorization tests are not connected yet. The app does not yet include irregular room geometry, fixed features, AI document processing, authoritative server validation, optimization, or simulation. Claude API, Python services, Stripe, and Three.js are not connected yet.
+The migrations define profiles, organizations, memberships, venues, spaces, events, and floor plans with role-based RLS. They were applied to the supplied EventTwin Supabase project on October 9, 2026. The server validates round-table draft geometry, but floor-plan approval stays blocked until exits, fixed features, and other required constraints are modeled. Cloud floor plans are immutable versions. Private BEO document storage, invitation flows, and broader authorization tests remain to be built. The app does not yet include irregular room geometry, fixed features, AI document processing, full operational optimization, or simulation. Claude API, Python services, Stripe, and Three.js are not connected yet.

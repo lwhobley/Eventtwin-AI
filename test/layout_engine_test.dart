@@ -69,4 +69,17 @@ void main() {
     expect(issues.any((issue) => issue.contains('beyond')), isTrue);
     expect(issues.any((issue) => issue.contains('overlap')), isTrue);
   });
+
+  test('rejects non-finite room and table coordinates', () {
+    final invalidRoom = Space(
+      id: room.id,
+      venueId: room.venueId,
+      name: room.name,
+      widthMeters: double.infinity,
+      heightMeters: room.heightMeters,
+      verified: true,
+    );
+    expect(() => generateLayouts(invalidRoom, event), throwsStateError);
+    expect(validateLayout(room, [TablePosition(double.nan, 3)]), isNotEmpty);
+  });
 }

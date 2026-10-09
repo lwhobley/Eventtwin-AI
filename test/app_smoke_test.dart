@@ -15,7 +15,7 @@ void main() {
           preferencesProvider.overrideWithValue(preferences),
           initialDataProvider.overrideWithValue(const ProjectData()),
         ],
-        child: const EventTwinApp(),
+        child: const EventTwinApp(localDemo: true),
       ),
     );
     await tester.pumpAndSettle();

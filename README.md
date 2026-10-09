@@ -1,6 +1,6 @@
 # EventTwin AI
 
-Standalone Flutter application for measured event-space planning. This repository currently contains an **early local demonstration**, not a production SaaS deployment.
+Standalone Flutter application for measured event-space planning. The repository supports Supabase email authentication and organization-scoped venues, rooms, and event drafts. The floor-plan editor remains an explicitly selected local demonstration.
 
 The full product brief is in [docs/MASTER_BUILD_PROMPT.md](docs/MASTER_BUILD_PROMPT.md).
 
@@ -8,14 +8,27 @@ The full product brief is in [docs/MASTER_BUILD_PROMPT.md](docs/MASTER_BUILD_PRO
 
 Requires Flutter 3.47.5 or a compatible stable release.
 
+### Supabase mode
+
+1. Copy `supabase.local.json.example` to `supabase.local.json` and enter the project's **publishable** key locally. This file is ignored by Git. Never use a service-role key in the Flutter app.
+2. Apply `supabase/migrations/20261009120000_tenant_foundation.sql` in the Supabase SQL Editor before signing up.
+3. Run:
+
 ```powershell
-flutter pub get
-flutter run -d chrome
+flutter run -d chrome --dart-define-from-file=supabase.local.json
 ```
 
-The amber banner identifies local mode. Data is stored in browser or device preferences. It has no cloud authentication, collaboration, or tenant isolation. Do not enter confidential BEOs in this demonstration.
+The configured URL defaults to the supplied EventTwin project. Email sign-up, sign-in, password reset, organization creation, and RLS-protected venue, room, and event draft operations are available.
 
-## Current workflow
+### Local demonstration mode
+
+```powershell
+flutter run -d chrome --dart-define=EVENTTWIN_LOCAL_DEMO=true
+```
+
+Local data is stored in browser or device preferences. It has no cloud authentication or tenant isolation. Do not enter confidential BEOs in this demonstration.
+
+## Local floor-plan demonstration
 
 1. Create a venue and enter a rectangular room's verified width and depth in feet.
 2. Create an event, paste BEO text or use the clearly labeled sample, and extract explicit `Event:` and `Guests:` lines. Enter missing fields manually.
@@ -33,6 +46,6 @@ flutter analyze
 dart format --output=none --set-exit-if-changed lib test
 ```
 
-## Next milestones
+## Scope and limitations
 
-Connect Supabase Auth and a tenant-isolated schema before storing real user data. Then add verified irregular room geometry and fixed features, BEO document processing with explicit source references and confirmation, authoritative server validation, optimization, and simulation. Claude API, Python services, Stripe, and Three.js are not connected yet.
+The migration currently defines profiles, organizations, memberships, venues, spaces, events, and floor plans with role-based RLS. The Flutter cloud workspace currently exposes organization creation and venue, room, and event draft operations. Floor-plan generation/editor and PDF export remain in local demo mode; cloud layouts, private BEO document storage, invitation flows, and RLS authorization integration tests are not connected yet. The app does not yet include irregular room geometry, fixed features, AI document processing, authoritative server validation, optimization, or simulation. Claude API, Python services, Stripe, and Three.js are not connected yet.

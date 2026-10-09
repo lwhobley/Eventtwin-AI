@@ -7,32 +7,47 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'app_config.dart';
 import 'beo_parser.dart';
 
 import 'layout_engine.dart';
 import 'model.dart';
 import 'workspace.dart';
+import 'supabase_auth.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  final saved = prefs.getString('eventtwin_local_workspace_v1');
-  ProjectData initial;
-  try {
-    initial = saved == null ? const ProjectData() : ProjectData.decode(saved);
-  } catch (_) {
-    initial = const ProjectData();
+  if (!AppConfig.localDemo && AppConfig.supabasePublishableKey.isNotEmpty) {
+    await Supabase.initialize(
+      url: AppConfig.supabaseUrl,
+      publishableKey: AppConfig.supabasePublishableKey,
+    );
   }
+  final SharedPreferences? prefs = AppConfig.localDemo
+      ? await SharedPreferences.getInstance()
+      : null;
+  final initial = _decodeLocalData(
+    prefs?.getString('eventtwin_local_workspace_v1'),
+  );
   runApp(
     ProviderScope(
       overrides: [
-        preferencesProvider.overrideWithValue(prefs),
+        if (prefs != null) preferencesProvider.overrideWithValue(prefs),
         initialDataProvider.overrideWithValue(initial),
       ],
       child: const EventTwinApp(),
     ),
   );
+}
+
+ProjectData _decodeLocalData(String? saved) {
+  try {
+    return saved == null ? const ProjectData() : ProjectData.decode(saved);
+  } catch (_) {
+    return const ProjectData();
+  }
 }
 
 final router = GoRouter(
@@ -57,25 +72,46 @@ final router = GoRouter(
 );
 
 class EventTwinApp extends StatelessWidget {
-  const EventTwinApp({super.key});
-  @override
-  Widget build(BuildContext context) => MaterialApp.router(
-    title: 'EventTwin AI',
-    routerConfig: router,
-    theme: ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xff176e72),
-        surface: const Color(0xfff8f8f5),
-      ),
-      scaffoldBackgroundColor: const Color(0xfff8f8f5),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xff10283c),
-        foregroundColor: Colors.white,
-      ),
+  const EventTwinApp({super.key, this.localDemo = AppConfig.localDemo});
+  final bool localDemo;
+  ThemeData get _theme => ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: const Color(0xff176e72),
+      surface: const Color(0xfff8f8f5),
     ),
-    debugShowCheckedModeBanner: false,
+    scaffoldBackgroundColor: const Color(0xfff8f8f5),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xff10283c),
+      foregroundColor: Colors.white,
+    ),
   );
+
+  @override
+  Widget build(BuildContext context) {
+    if (localDemo) {
+      return MaterialApp.router(
+        title: 'EventTwin AI',
+        routerConfig: router,
+        theme: _theme,
+        debugShowCheckedModeBanner: false,
+      );
+    }
+    if (AppConfig.supabasePublishableKey.isEmpty) {
+      return MaterialApp(
+        title: 'EventTwin AI',
+        theme: _theme,
+        debugShowCheckedModeBanner: false,
+        home: const SupabaseConfigurationPage(),
+      );
+    }
+    return MaterialApp(
+      title: 'EventTwin AI',
+      theme: _theme,
+      debugShowCheckedModeBanner: false,
+      home: const SupabaseAuthGate(),
+    );
+  }
 }
 
 class AppShell extends ConsumerWidget {
